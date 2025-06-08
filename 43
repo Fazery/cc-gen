@@ -1,0 +1,476 @@
+-- Hidden Ware v1.0
+-- Roblox Cheat Framework for private testing
+-- Works with Xeno executor or similar
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+--== UI Setup ==--
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "HiddenWareUI"
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local themeColor = Color3.fromRGB(200, 40, 40) -- red theme
+
+-- Helper for creating UI elements
+local function createButton(text, pos, size, parent)
+	local btn = Instance.new("TextButton")
+	btn.Text = text
+	btn.Position = pos
+	btn.Size = size
+	btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	btn.BorderSizePixel = 0
+	btn.TextColor3 = Color3.fromRGB(230, 230, 230)
+	btn.Font = Enum.Font.Code
+	btn.TextSize = 14
+	btn.Parent = parent
+	btn.AutoButtonColor = true
+	return btn
+end
+
+local function createLabel(text, pos, size, parent)
+	local lbl = Instance.new("TextLabel")
+	lbl.Text = text
+	lbl.Position = pos
+	lbl.Size = size
+	lbl.BackgroundTransparency = 1
+	lbl.TextColor3 = Color3.fromRGB(230, 230, 230)
+	lbl.Font = Enum.Font.Code
+	lbl.TextSize = 16
+	lbl.TextWrapped = true
+	lbl.Parent = parent
+	return lbl
+end
+
+local function createToggle(text, pos, size, parent)
+	local frame = Instance.new("Frame")
+	frame.Size = size
+	frame.Position = pos
+	frame.BackgroundTransparency = 1
+	frame.Parent = parent
+
+	local toggleBtn = Instance.new("TextButton")
+	toggleBtn.Text = "OFF"
+	toggleBtn.Size = UDim2.new(0, 40, 1, 0)
+	toggleBtn.Position = UDim2.new(1, -45, 0, 0)
+	toggleBtn.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+	toggleBtn.BorderSizePixel = 0
+	toggleBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
+	toggleBtn.Font = Enum.Font.Code
+	toggleBtn.TextSize = 14
+	toggleBtn.Parent = frame
+
+	local label = Instance.new("TextLabel")
+	label.Text = text
+	label.Size = UDim2.new(1, -50, 1, 0)
+	label.BackgroundTransparency = 1
+	label.TextColor3 = Color3.fromRGB(230, 230, 230)
+	label.Font = Enum.Font.Code
+	label.TextSize = 14
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = frame
+
+	local enabled = false
+	toggleBtn.MouseButton1Click:Connect(function()
+		enabled = not enabled
+		toggleBtn.Text = enabled and "ON" or "OFF"
+		toggleBtn.BackgroundColor3 = enabled and themeColor or Color3.fromRGB(80, 20, 20)
+		if frame.OnToggle then
+			frame.OnToggle(enabled)
+		end
+	end)
+
+	function frame:SetState(state)
+		enabled = state
+		toggleBtn.Text = enabled and "ON" or "OFF"
+		toggleBtn.BackgroundColor3 = enabled and themeColor or Color3.fromRGB(80, 20, 20)
+	end
+
+	function frame:GetState()
+		return enabled
+	end
+
+	return frame
+end
+
+-- Main Container
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 650, 0, 400)
+mainFrame.Position = UDim2.new(0.5, -325, 0.5, -200)
+mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
+
+-- Title Bar
+local title = createLabel("Hidden Ware - Private Cheat Framework", UDim2.new(0, 10, 0, 5), UDim2.new(1, -20, 0, 30), mainFrame)
+title.TextColor3 = themeColor
+
+-- Tabs Container
+local tabsFrame = Instance.new("Frame")
+tabsFrame.Size = UDim2.new(0, 120, 0, 365)
+tabsFrame.Position = UDim2.new(0, 10, 0, 40)
+tabsFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+tabsFrame.BorderSizePixel = 0
+tabsFrame.Parent = mainFrame
+
+-- Content Container
+local contentFrame = Instance.new("Frame")
+contentFrame.Size = UDim2.new(0, 500, 0, 365)
+contentFrame.Position = UDim2.new(0, 140, 0, 40)
+contentFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+contentFrame.BorderSizePixel = 0
+contentFrame.Parent = mainFrame
+
+local tabs = {}
+local contentPages = {}
+
+local function createTab(name)
+	local btn = createButton(name:sub(1,1):upper()..name:sub(2), UDim2.new(0, 10, 0, 10 + (#tabs * 35)), UDim2.new(0, 100, 0, 30), tabsFrame)
+	tabs[name] = btn
+	local page = Instance.new("ScrollingFrame")
+	page.Size = UDim2.new(1, -10, 1, -10)
+	page.Position = UDim2.new(0, 5, 0, 5)
+	page.BackgroundTransparency = 1
+	page.CanvasSize = UDim2.new(0, 0, 0, 0)
+	page.ScrollBarThickness = 6
+	page.Visible = false
+	page.Parent = contentFrame
+	contentPages[name] = page
+
+	btn.MouseButton1Click:Connect(function()
+		for _, p in pairs(contentPages) do p.Visible = false end
+		page.Visible = true
+		for _, t in pairs(tabs) do t.BackgroundColor3 = Color3.fromRGB(40, 40, 40) end
+		btn.BackgroundColor3 = themeColor
+	end)
+
+	return page
+end
+
+-- Create tabs: Main, Ragebot, Visuals, Players, Misc
+local mainTab = createTab("main")
+local ragebotTab = createTab("ragebot")
+local visualsTab = createTab("visuals")
+local playersTab = createTab("players")
+local miscTab = createTab("misc")
+
+-- Show main tab initially
+tabs["main"].BackgroundColor3 = themeColor
+contentPages["main"].Visible = true
+
+--== Features and UI Elements ==--
+
+-- Main Tab
+createLabel("Welcome to Hidden Ware", UDim2.new(0, 10, 0, 10), UDim2.new(1, -20, 0, 40), mainTab)
+
+-- Ragebot Tab Elements
+local aimbotEnabledToggle = createToggle("Enable Aimbot", UDim2.new(0, 10, 0, 10), UDim2.new(0, 200, 0, 25), ragebotTab)
+local legitFovSliderLabel = createLabel("Legitbot FOV: 100", UDim2.new(0, 10, 0, 50), UDim2.new(0, 180, 0, 20), ragebotTab)
+
+-- FOV slider (simple)
+local legitFovValue = 100
+local function updateLegitFovLabel()
+	legitFovSliderLabel.Text = "Legitbot FOV: ".. tostring(legitFovValue)
+end
+
+local function clamp(n, min, max)
+	return math.min(math.max(n, min), max)
+end
+
+-- Visuals Tab Elements
+local espToggle = createToggle("Enable ESP", UDim2.new(0, 10, 0, 10), UDim2.new(0, 200, 0, 25), visualsTab)
+local crosshairToggle = createToggle("Draw Crosshair", UDim2.new(0, 10, 0, 50), UDim2.new(0, 200, 0, 25), visualsTab)
+local hideCrosshairToggle = createToggle("Hide Game Crosshair", UDim2.new(0, 10, 0, 90), UDim2.new(0, 200, 0, 25), visualsTab)
+
+-- Players Tab Elements
+local playersList = Instance.new("ScrollingFrame")
+playersList.Size = UDim2.new(1, -20, 1, -20)
+playersList.Position = UDim2.new(0, 10, 0, 10)
+playersList.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+playersList.BorderSizePixel = 0
+playersList.CanvasSize = UDim2.new(0, 0, 0, 0)
+playersList.ScrollBarThickness = 6
+playersList.Parent = playersTab
+
+local playerButtons = {}
+
+local function updatePlayersList()
+	-- Clear old
+	for _, child in pairs(playersList:GetChildren()) do
+		if child:IsA("Frame") then child:Destroy() end
+	end
+	playerButtons = {}
+
+	local y = 0
+	for _, p in pairs(Players:GetPlayers()) do
+		if p ~= LocalPlayer then
+			local pFrame = Instance.new("Frame")
+			pFrame.Size = UDim2.new(1, -20, 0, 30)
+			pFrame.Position = UDim2.new(0, 10, 0, y)
+			pFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+			pFrame.Parent = playersList
+
+			local nameLabel = Instance.new("TextLabel")
+			nameLabel.Text = p.Name
+			nameLabel.Size = UDim2.new(0, 120, 1, 0)
+			nameLabel.BackgroundTransparency = 1
+			nameLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+			nameLabel.Font = Enum.Font.Code
+			nameLabel.TextSize = 16
+			nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+			nameLabel.Parent = pFrame
+
+			local function createPlayerBtn(text, posX, callback)
+				local btn = Instance.new("TextButton")
+				btn.Text = text
+				btn.Size = UDim2.new(0, 70, 0, 22)
+				btn.Position = UDim2.new(0, posX, 0, 4)
+				btn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+				btn.TextColor3 = Color3.fromRGB(230, 230, 230)
+				btn.Font = Enum.Font.Code
+				btn.TextSize = 14
+				btn.Parent = pFrame
+				btn.AutoButtonColor = true
+				btn.MouseButton1Click:Connect(function()
+					callback(p)
+				end)
+				return btn
+			end
+
+			createPlayerBtn("Spectate", 130, function(player)
+				spectatePlayer(player)
+			end)
+			createPlayerBtn("Teleport", 210, function(player)
+				teleportToPlayer(player)
+			end)
+
+			y = y + 35
+		end
+	end
+	playersList.CanvasSize = UDim2.new(0, 0, 0, y)
+end
+
+Players.PlayerAdded:Connect(updatePlayersList)
+Players.PlayerRemoving:Connect(updatePlayersList)
+updatePlayersList()
+
+-- Misc Tab Elements
+local autoHealToggle = createToggle("Auto Heal", UDim2.new(0, 10, 0, 10), UDim2.new(0, 200, 0, 25), miscTab)
+local rapidFireToggle = createToggle("Rapid Fire", UDim2.new(0, 10, 0, 50), UDim2.new(0, 200, 0, 25), miscTab)
+local fakePingToggle = createToggle("Fake Ping", UDim2.new(0, 10, 0, 90), UDim2.new(0, 200, 0, 25), miscTab)
+
+--== Core Features Implementation ==--
+
+-- Variables for toggles
+local aimbotEnabled = false
+local espEnabled = false
+local crosshairEnabled = false
+local hideGameCrosshair = false
+local autoHealEnabled = false
+local rapidFireEnabled = false
+local fakePingEnabled = false
+
+-- Update states on toggle
+aimbotEnabledToggle.OnToggle = function(state)
+	aimbotEnabled = state
+end
+espToggle.OnToggle = function(state)
+	espEnabled = state
+	if not state then
+		-- Clear all ESP boxes
+		for _, box in pairs(espBoxes) do
+			box:Destroy()
+		end
+		espBoxes = {}
+	end
+end
+crosshairToggle.OnToggle = function(state)
+	crosshairEnabled = state
+end
+hideCrosshairToggle.OnToggle = function(state)
+	hideGameCrosshair = state
+	-- Hide game crosshair by setting transparency or game-specific method
+	-- Placeholder for game-specific code
+end
+autoHealToggle.OnToggle = function(state)
+	autoHealEnabled = state
+end
+rapidFireToggle.OnToggle = function(state)
+	rapidFireEnabled = state
+end
+fakePingToggle.OnToggle = function(state)
+	fakePingEnabled = state
+end
+
+-- Aimbot variables
+local aimbotFOV = 100
+local currentTarget = nil
+
+-- ESP Boxes
+local espBoxes = {}
+
+-- Function: Get closest target within FOV
+local function getClosestTarget()
+	local mousePos = UserInputService:GetMouseLocation()
+	local closest = nil
+	local closestDist = math.huge
+	for _, p in pairs(Players:GetPlayers()) do
+		if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+			local rootPart = p.Character.HumanoidRootPart
+			local screenPos, onScreen = Camera:WorldToViewportPoint(rootPart.Position)
+			if onScreen then
+				local dist = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(mousePos.X, mousePos.Y)).Magnitude
+				if dist < closestDist and dist <= aimbotFOV then
+					closestDist = dist
+					closest = p
+				end
+			end
+		end
+	end
+	return closest
+end
+
+-- Spectate functionality
+local spectating = false
+local spectateConnection = nil
+
+function spectatePlayer(player)
+	if spectateConnection then spectateConnection:Disconnect() end
+	if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+		spectating = true
+		spectateConnection = RunService.RenderStepped:Connect(function()
+			if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+				Camera.CFrame = player.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 10)
+			else
+				spectating = false
+				spectateConnection:Disconnect()
+			end
+		end)
+	end
+end
+
+-- Teleport to player
+function teleportToPlayer(player)
+	if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+		local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+		if root then
+			root.CFrame = player.Character.HumanoidRootPart.CFrame * CFrame.new(0, 3, 0)
+		end
+	end
+end
+
+-- ESP Update Loop
+RunService.RenderStepped:Connect(function()
+	if espEnabled then
+		for _, p in pairs(Players:GetPlayers()) do
+			if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+				local rootPart = p.Character.HumanoidRootPart
+				local screenPos, onScreen = Camera:WorldToViewportPoint(rootPart.Position)
+				if onScreen then
+					if not espBoxes[p] then
+						local box = Drawing and Drawing.new("Square") or nil
+						if box then
+							box.Color = Color3.fromRGB(255, 0, 0)
+							box.Thickness = 2
+							box.Filled = false
+						else
+							-- Fallback if Drawing not available
+							continue
+						end
+						espBoxes[p] = box
+					end
+					local box = espBoxes[p]
+					box.Position = Vector2.new(screenPos.X - 20, screenPos.Y - 20)
+					box.Size = Vector2.new(40, 40)
+					box.Visible = true
+				elseif espBoxes[p] then
+					espBoxes[p].Visible = false
+				end
+			end
+		end
+	else
+		for _, box in pairs(espBoxes) do
+			box.Visible = false
+		end
+	end
+end)
+
+-- Crosshair drawing
+local crosshair = nil
+RunService.RenderStepped:Connect(function()
+	if crosshairEnabled and Drawing then
+		if not crosshair then
+			crosshair = Drawing.new("Line")
+			crosshair.Color = themeColor
+			crosshair.Thickness = 2
+			crosshair.From = Vector2.new(Camera.ViewportSize.X / 2 - 10, Camera.ViewportSize.Y / 2)
+			crosshair.To = Vector2.new(Camera.ViewportSize.X / 2 + 10, Camera.ViewportSize.Y / 2)
+			local crosshair2 = Drawing.new("Line")
+			crosshair2.Color = themeColor
+			crosshair2.Thickness = 2
+			crosshair2.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2 - 10)
+			crosshair2.To = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2 + 10)
+			crosshair.ParentCross = crosshair2
+		end
+		crosshair.Visible = true
+		crosshair.ParentCross.Visible = true
+	else
+		if crosshair then
+			crosshair.Visible = false
+			if crosshair.ParentCross then
+				crosshair.ParentCross.Visible = false
+			end
+		end
+	end
+end)
+
+-- Aimbot Logic
+RunService.RenderStepped:Connect(function()
+	if aimbotEnabled and not spectating then
+		currentTarget = getClosestTarget()
+		if currentTarget and currentTarget.Character and currentTarget.Character:FindFirstChild("HumanoidRootPart") then
+			local rootPart = currentTarget.Character.HumanoidRootPart
+			-- Smooth aim to target (simple example)
+			local cameraCFrame = Camera.CFrame
+			local targetPos = rootPart.Position
+			local direction = (targetPos - cameraCFrame.Position).Unit
+			local newCFrame = CFrame.new(cameraCFrame.Position, cameraCFrame.Position + direction)
+			Camera.CFrame = newCFrame
+		end
+	end
+end)
+
+-- Rapid fire example (fire on mouse hold)
+UserInputService.InputBegan:Connect(function(input)
+	if rapidFireEnabled and input.UserInputType == Enum.UserInputType.MouseButton1 then
+		while rapidFireEnabled and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
+			-- Simulate mouse click fire event here
+			-- Placeholder: print for demo
+			print("Rapid fire shooting!")
+			wait(0.05)
+		end
+	end
+end)
+
+-- Auto Heal example (placeholder, game specific)
+RunService.Heartbeat:Connect(function()
+	if autoHealEnabled then
+		-- You'd add game-specific healing logic here
+		-- e.g. check health and activate heal item
+	end
+end)
+
+-- Fake ping toggle (placeholder)
+if fakePingEnabled then
+	-- Implement fake ping by manipulating network or simulated lag
+end
+
+-- More placeholders for your advanced features go here
+
+--=== END OF SCRIPT ===--
