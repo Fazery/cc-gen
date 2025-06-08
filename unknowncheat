@@ -4,13 +4,13 @@ local KeySystem = loadstring(game:HttpGet("https://raw.githubusercontent.com/Oop
 local KeyValid = false
 local response = KeySystem:Init({
 	Debug=false, -- <bool> Prints some output in console when true
-	Title="ExampleHub | Key System", -- <string or nil> Title of key system
+	Title="Hidden Ware Key System", -- <string or nil> Title of key system
 	Description=nil, -- <string or nil> Description of key system
-	Link="", -- <string> String to get key
-	Discord="test", -- <string or nil> Button to join your discord server
+	Link="https://discord.gg/geQwsVdrTU", -- <string> String to get key
+	Discord="https://discord.gg/geQwsVdrTU", -- <string or nil> Button to join your discord server
 	SaveKey=false, -- <bool or nil> Just auto save key
 	Verify=function(key) -- <function> Verify is key valid
-		if key=="1234" then
+		if key=="hiddenware2" then
       KeyValid=true
 			return true
 		else
@@ -26,7 +26,7 @@ local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Perfe
 local ThemeManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/Perfectionsthegoat/hexui/main/part2"))()
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/refs/heads/main/addons/SaveManager.lua"))()
 local Window = Library:CreateWindow({
- Title = 'made by lzfv',
+ Title = 'HIDDEN WARE',
     Center = true,
     AutoShow = true,
     TabPadding = 8,
