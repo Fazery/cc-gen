@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Haki.Ware Security Suite</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0c0e1d, #1a1c2f);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #e0e0ff;
+            overflow: hidden;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            height: 650px;
+            background: rgba(15, 17, 30, 0.95);
+            border: 1px solid rgba(94, 92, 230, 0.2);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        .title-bar {
+            height: 50px;
+            background: linear-gradient(90deg, #0a0c1a, #15172b);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid rgba(94, 92, 230, 0.1);
+            position: relative;
+            cursor: move;
+        }
+        
+        .title {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #0a84ff, #5e5ce6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+        }
+        
+        .window-controls {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .control-btn {
+            width: 12px;
+            height: 12px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .control-btn:hover {
+            transform: scale(1.2);
+        }
+        
+        .close { background: #ff5f56; }
+        .minimize { background: #ffbd2e; }
+        .maximize { background: #27c93f; }
+        
+        .tabs {
+            display: flex;
+            background: linear-gradient(90deg, #0f1120, #171a32);
+            border-bottom: 1px solid rgba(94, 92, 230, 0.1);
+        }
+        
+        .tab {
+            padding: 14px 24px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+            color: rgba(224, 224, 255, 0.7);
+        }
+        
+        .tab.active {
+            color: #0a84ff;
+            background: rgba(10, 12, 24, 0.8);
+        }
+        
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #0a84ff, #5e5ce6);
+        }
+        
+        .content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .sidebar {
+            width: 200px;
+            background: rgba(10, 12, 24, 0.8);
+            padding: 20px 0;
+            border-right: 1px solid rgba(94, 92, 230, 0.1);
+            overflow-y: auto;
+        }
+        
+        .section {
+            padding: 10px 0;
+        }
+        
+        .section-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: rgba(94, 92, 230, 0.8);
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+            padding: 0 20px;
+        }
+        
+        .feature-item {
+            padding: 12px 20px;
+            font-size: 14px;
+            color: rgba(224, 224, 255, 0.9);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            border-left: 3px solid transparent;
+        }
+        
+        .feature-item:hover {
+            background: rgba(30, 32, 50, 0.5);
+        }
+        
+        .feature-item.active {
+            background: rgba(30, 32, 50, 0.8);
+            border-left: 3px solid #0a84ff;
+            color: #0a84ff;
+        }
+        
+        .feature-item i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .features {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .feature-card {
+            background: linear-gradient(135deg, rgba(20, 22, 40, 0.8), rgba(15, 17, 30, 0.9));
+            padding: 20px;
+            border: 1px solid rgba(94, 92, 230, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #0a84ff, #5e5ce6);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .feature-card.active::before {
+            opacity: 1;
+        }
+        
+        .feature-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(10, 132, 255, 0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 15px;
+            font-size: 18px;
+            color: #0a84ff;
+        }
+        
+        .feature-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #e0e0ff;
+            flex: 1;
+        }
+        
+        .feature-desc {
+            font-size: 14px;
+            color: rgba(224, 224, 255, 0.7);
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+        
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: .4s;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: rgba(255, 255, 255, 0.7);
+            transition: .4s;
+        }
+        
+        input:checked + .slider {
+            background: linear-gradient(90deg, #0a84ff, #5e5ce6);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+            background-color: white;
+        }
+        
+        .slider-container {
+            margin-top: 15px;
+        }
+        
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .slider-label {
+            font-size: 13px;
+            color: rgba(224, 224, 255, 0.8);
+        }
+        
+        .slider-value {
+            font-size: 13px;
+            color: #0a84ff;
+            font-weight: 600;
+        }
+        
+        .slider-input {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+        }
+        
+        .slider-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #0a84ff;
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(10, 132, 255, 0.8);
+        }
+        
+        .status-bar {
+            height: 30px;
+            background: linear-gradient(90deg, #0a0c1a, #15172b);
+            border-top: 1px solid rgba(94, 92, 230, 0.1);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 12px;
+            color: rgba(224, 224, 255, 0.7);
+        }
+        
+        .status-item {
+            margin-right: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            background: #27c93f;
+            margin-right: 8px;
+            box-shadow: 0 0 8px #27c93f;
+        }
+        
+        .logo {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #0a84ff, #5e5ce6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            opacity: 0.1;
+            z-index: -1;
+        }
+        
+        .notification {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            padding: 10px 15px;
+            background: rgba(20, 22, 40, 0.9);
+            border-left: 3px solid #0a84ff;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transform: translateX(-120%);
+            transition: transform 0.3s ease;
+            z-index: 200;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #0a84ff;
+        }
+        
+        .notification-content {
+            font-size: 13px;
+            color: rgba(224, 224, 255, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <div class="notification" id="notification">
+        <div class="notification-title" id="notifTitle">System Notification</div>
+        <div class="notification-content" id="notifContent">Silent Aim activated</div>
+    </div>
+    
+    <div class="container" id="container">
+        <div class="title-bar" id="titleBar">
+            <div class="title">HAKI.WARE SECURITY SUITE</div>
+            <div class="window-controls">
+                <div class="control-btn close" id="btnClose"></div>
+                <div class="control-btn minimize" id="btnMinimize"></div>
+                <div class="control-btn maximize" id="btnMaximize"></div>
+            </div>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active">Combat</div>
+            <div class="tab">Visuals</div>
+            <div class="tab">Movement</div>
+            <div class="tab">Utilities</div>
+        </div>
+        
+        <div class="content">
+            <div class="sidebar">
+                <div class="section">
+                    <div class="section-title">Aim Features</div>
+                    <div class="feature-item active" data-feature="silentAim">
+                        <i class="fas fa-crosshairs"></i> Silent Aim
+                    </div>
+                    <div class="feature-item" data-feature="triggerBot">
+                        <i class="fas fa-bullseye"></i> Trigger Bot
+                    </div>
+                    <div class="feature-item" data-feature="hitboxExpander">
+                        <i class="fas fa-expand"></i> Hitbox Expander
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">Safety Checks</div>
+                    <div class="feature-item" data-feature="wallCheck">
+                        <i class="fas fa-shield-alt"></i> Wall Check
+                    </div>
+                    <div class="feature-item" data-feature="koCheck">
+                        <i class="fas fa-skull"></i> KO Check
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">Movement</div>
+                    <div class="feature-item" data-feature="walkSpeed">
+                        <i class="fas fa-walking"></i> Walk Speed
+                    </div>
+                </div>
+            </div>
+            
+            <div class="features">
+                <!-- Silent Aim Card -->
+                <div class="feature-card active" id="silentAimCard">
+                    <div class="feature-header">
+                        <div class="feature-icon"><i class="fas fa-crosshairs"></i></div>
+                        <div class="feature-title">Silent Aim</div>
+                        <label class="toggle">
+                            <input type="checkbox" id="silentAimToggle" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="feature-desc">
+                        Automatically aims at opponents without visibly moving your crosshair. Undetectable by most anti-cheat systems.
+                    </div>
+                    <div class="slider-container">
+                        <div class="slider-header">
+                            <div class="slider-label">Accuracy</div>
+                            <div class="slider-value" id="accuracyValue">85%</div>
+                        </div>
+                        <input type="range" min="50" max="100" value="85" class="slider-input" id="accuracySlider">
+                    </div>
+                    <div class="slider-container">
+                        <div class="slider-header">
+                            <div class="slider-label">Reaction Time</div>
+                            <div class="slider-value" id="reactionValue">120ms</div>
+                        </div>
+                        <input type="range" min="50" max="300" value="120" class="slider-input" id="reactionSlider">
+                    </div>
+                </div>
+                
+                <!-- Wall Check Card -->
+                <div class="feature-card" id="wallCheckCard">
+                    <div class="feature-header">
+                        <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+                        <div class="feature-title">Wall Check</div>
+                        <label class="toggle">
+                            <input type="checkbox" id="wallCheckToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="feature-desc">
+                        Prevents targeting opponents through walls and other solid objects to avoid detection.
+                    </div>
+                    <div class="slider-container">
+                        <div class="slider-header">
+                            <div class="slider-label">Wall Thickness</div>
+                            <div class="slider-value" id="wallThicknessValue">Medium</div>
+                        </div>
+                        <input type="range" min="1" max="3" value="2" class="slider-input" id="wallThicknessSlider">
+                    </div>
+                </div>
+                
+                <!-- KO Check Card -->
+                <div class="feature-card" id="koCheckCard">
+                    <div class="feature-header">
+                        <div class="feature-icon"><i class="fas fa-skull"></i></div>
+                        <div class="feature-title">KO Check</div>
+                        <label class="toggle">
+                            <input type="checkbox" id="koCheckToggle" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="feature-desc">
+                        Automatically stops targeting opponents who are knocked out or eliminated.
+                    </div>
+                    <div class="slider-container">
+                        <div class="slider-header">
+                            <div class="slider-label">Detection Range</div>
+                            <div class="slider-value" id="koRangeValue">25m</div>
+                        </div>
+                        <input type="range" min="10" max="50" value="25" class="slider-input" id="koRangeSlider">
+                    </div>
+                </div>
+                
+                <!-- Trigger Bot Card -->
+                <div class="feature-card" id="triggerBotCard">
+                    <div class="feature-header">
+                        <div class="feature-icon"><i class="fas fa-bullseye"></i></div>
+                        <div class="feature-title">Trigger Bot</div>
+                        <label class="toggle">
+                            <input type="checkbox" id="triggerBotToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="feature-desc">
+                        Automatically fires your weapon when the crosshair is over an opponent.
+                    </div>
+                    <div class="slider-container">
+                        <div class="slider-header">
+                            <div class="slider-label">Activation Delay</div>
+                            <div class="slider-value" id="triggerDelayValue">50ms</div>
+                        </div>
+                        <input type="range" min="0" max="200" value="50" class="slider-input" id="triggerDelaySlider">
+                    </div>
+                </div>
+                
+                <!-- Walk Speed Card -->
+                <div class="feature-card" id="walkSpeedCard">
+                    <div class="feature-header">
+                        <div class="feature-icon"><i class="fas fa-walking"></i></div>
+                        <div class="feature-title">Walk Speed</div>
+                        <label class="toggle">
+                            <input type="checkbox" id="walkSpeedToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="feature-desc">
+                        Increases your movement speed beyond normal game limits.
+                    </div>
+                    <div class="slider-container">
+                        <div class="slider-header">
+                            <div class="slider-label">Speed Multiplier</div>
+                            <div class="slider-value" id="speedValue">1.5x</div>
+                        </div>
+                        <input type="range" min="1" max="5" value="15" class="slider-input" id="speedSlider">
+                    </div>
+                </div>
+                
+                <!-- Hitbox Expander Card -->
+                <div class="feature-card" id="hitboxExpanderCard">
+                    <div class="feature-header">
+                        <div class="feature-icon"><i class="fas fa-expand"></i></div>
+                        <div class="feature-title">Hitbox Expander</div>
+                        <label class="toggle">
+                            <input type="checkbox" id="hitboxToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="feature-desc">
+                        Expands opponent hitboxes to make them easier to hit.
+                    </div>
+                    <div class="slider-container">
+                        <div class="slider-header">
+                            <div class="slider-label">Expansion Size</div>
+                            <div class="slider-value" id="hitboxValue">15%</div>
+                        </div>
+                        <input type="range" min="5" max="30" value="15" class="slider-input" id="hitboxSlider">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-indicator"></div>
+                <span>SECURITY STATUS: ACTIVE</span>
+            </div>
+            <div class="status-item">DETECTION: 0%</div>
+            <div class="status-item">LATENCY: 28ms</div>
+            <div class="status-item">VERSION: 3.1.8</div>
+            <div class="status-item" style="margin-left:auto;">USER: SECURITY-AGENT-01</div>
+        </div>
+        
+        <div class="logo">HAKI.WARE</div>
+    </div>
+
+    <script>
+        // Initialize feature cards
+        const featureItems = document.querySelectorAll('.feature-item');
+        const featureCards = document.querySelectorAll('.feature-card');
+        
+        featureItems.forEach(item => {
+            item.addEventListener('click', function() {
+                const feature = this.getAttribute('data-feature');
+                
+                // Update active item
+                featureItems.forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Update active card
+                featureCards.forEach(card => {
+                    card.classList.remove('active');
+                    if (card.id === `${feature}Card`) {
+                        card.classList.add('active');
+                    }
+                });
+            });
+        });
+        
+        // Toggle functionality
+        const toggles = document.querySelectorAll('.toggle input');
+        toggles.forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                const card = this.closest('.feature-card');
+                const featureName = card.querySelector('.feature-title').textContent;
+                const status = this.checked ? 'activated' : 'deactivated';
+                
+                showNotification('Feature Updated', `${featureName} ${status}`);
+            });
+        });
+        
+        // Slider functionality
+        document.getElementById('accuracySlider').addEventListener('input', function() {
+            document.getElementById('accuracyValue').textContent = `${this.value}%`;
+        });
+        
+        document.getElementById('reactionSlider').addEventListener('input', function() {
+            document.getElementById('reactionValue').textContent = `${this.value}ms`;
+        });
+        
+        document.getElementById('wallThicknessSlider').addEventListener('input', function() {
+            const values = ['Thin', 'Medium', 'Thick'];
+            document.getElementById('wallThicknessValue').textContent = values[this.value - 1];
+        });
+        
+        document.getElementById('koRangeSlider').addEventListener('input', function() {
+            document.getElementById('koRangeValue').textContent = `${this.value}m`;
+        });
+        
+        document.getElementById('triggerDelaySlider').addEventListener('input', function() {
+            document.getElementById('triggerDelayValue').textContent = `${this.value}ms`;
+        });
+        
+        document.getElementById('speedSlider').addEventListener('input', function() {
+            document.getElementById('speedValue').textContent = `${(this.value / 10).toFixed(1)}x`;
+        });
+        
+        document.getElementById('hitboxSlider').addEventListener('input', function() {
+            document.getElementById('hitboxValue').textContent = `${this.value}%`;
+        });
+        
+        // Window controls
+        document.getElementById('btnClose').addEventListener('click', () => {
+            document.getElementById('container').style.opacity = '0';
+            setTimeout(() => {
+                showNotification('System', 'Haki.Ware minimized to system tray');
+            }, 300);
+        });
+        
+        document.getElementById('btnMinimize').addEventListener('click', () => {
+            document.getElementById('container').style.transform = 'scale(0.98)';
+            setTimeout(() => {
+                document.getElementById('container').style.transform = '';
+            }, 300);
+        });
+        
+        document.getElementById('btnMaximize').addEventListener('click', () => {
+            const container = document.getElementById('container');
+            container.style.width = container.style.width === '100%' ? '1000px' : '100%';
+            container.style.height = container.style.height === '100vh' ? '650px' : '100vh';
+        });
+        
+        // Draggable window
+        const titleBar = document.getElementById('titleBar');
+        let isDragging = false;
+        let offsetX, offsetY;
+        
+        titleBar.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            const container = document.getElementById('container');
+            offsetX = e.clientX - container.getBoundingClientRect().left;
+            offsetY = e.clientY - container.getBoundingClientRect().top;
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const container = document.getElementById('container');
+                container.style.left = (e.clientX - offsetX) + 'px';
+                container.style.top = (e.clientY - offsetY) + 'px';
+                container.style.position = 'fixed';
+            }
+        });
+        
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+        
+        // Notification function
+        function showNotification(title, content) {
+            const notification = document.getElementById('notification');
+            document.getElementById('notifTitle').textContent = title;
+            document.getElementById('notifContent').textContent = content;
+            
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Initial notification
+        setTimeout(() => {
+            showNotification('System Ready', 'Haki.Ware security suite initialized');
+        }, 1000);
+    </script>
+</body>
+</html>
