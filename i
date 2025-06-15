@@ -1,5 +1,5 @@
--- Haki Ware Final Edition: WalkSpeed Bypass + TriggerBot + Hitbox Expander + Silent Aim + UI
--- Author: lzfv + focus09308 + ChatGPT Enhanced
+-- Haki Ware Final Edition: WalkSpeed Bypass + TriggerBot + Hitbox Expander + Silent Aim + UI + WallCheck/KnockedCheck toggles
+-- Author: lzfv + focus09308
 
 local repo = 'https://raw.githubusercontent.com/wally-rblx/LinoriaLib/main/'
 
@@ -38,6 +38,10 @@ Toggles.Camlock:AddKeyPicker('CamlockBind', { Default = 'Q', SyncToggleState = t
 
 -- Silent Aim toggle added here as second toggle
 MainBox:AddToggle('SilentAim', { Text = 'Silent Aim', Default = false })
+
+-- Added WallCheckToggle and KnockedCheckToggle
+MainBox:AddToggle('WallCheckToggle', { Text = 'Enable WallCheck', Default = true })
+MainBox:AddToggle('KnockedCheckToggle', { Text = 'Enable Knocked Check', Default = true })
 
 MainBox:AddInput('Prediction', { Default = '0.15', Numeric = true, Finished = true, Text = 'Prediction' })
 MainBox:AddInput('Smoothing', { Default = '0.1', Numeric = true, Finished = true, Text = 'Smoothing' })
@@ -90,13 +94,35 @@ end
 local function GetClosestPlayer()
     local closest, shortestDist = nil, math.huge
     for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and not IsKO(player) and WallCheck(player.Character.HumanoidRootPart) then
-            local pos, onScreen = Camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
-            if onScreen then
-                local dist = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(pos.X, pos.Y)).Magnitude
-                if dist < shortestDist then
-                    shortestDist = dist
-                    closest = player
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+            if humanoid and humanoid.Health > 0 then
+                if Toggles.KnockedCheckToggle.Value and humanoid.Health <= humanoid.MaxHealth * 0.01 then
+                    -- If knocked check enabled and player is knocked (<=1%), skip
+                else
+                    local hrp = player.Character.HumanoidRootPart
+                    if Toggles.WallCheckToggle.Value then
+                        if WallCheck(hrp) then
+                            local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+                            if onScreen then
+                                local dist = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(pos.X, pos.Y)).Magnitude
+                                if dist < shortestDist then
+                                    shortestDist = dist
+                                    closest = player
+                                end
+                            end
+                        end
+                    else
+                        -- WallCheck disabled, ignore it
+                        local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+                        if onScreen then
+                            local dist = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(pos.X, pos.Y)).Magnitude
+                            if dist < shortestDist then
+                                shortestDist = dist
+                                closest = player
+                            end
+                        end
+                    end
                 end
             end
         end
@@ -148,25 +174,43 @@ RunService.RenderStepped:Connect(function()
     if Toggles.SilentAim.Value then
         -- Silent Aim: Always fire at predicted closest target without mouse proximity check
         local target = GetClosestPlayer()
-        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") and not IsKO(target) then
-            local root = target.Character.HumanoidRootPart
-            local pred = tonumber(Options.Prediction.Value) or 0.15
-            local predictedPos = root.Position + (root.Velocity * pred)
+        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+            local humanoid = target.Character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                if Toggles.KnockedCheckToggle.Value and humanoid.Health <= humanoid.MaxHealth * 0.01 then
+                    Toggles.SilentAim:SetValue(false)
+                    return
+                end
+                local root = target.Character.HumanoidRootPart
+                local pred = tonumber(Options.Prediction.Value) or 0.15
+                local predictedPos = root.Position + (root.Velocity * pred)
 
-            if WallCheck(root) then
+                if Toggles.WallCheckToggle.Value and not WallCheck(root) then
+                    return
+                end
+
                 Fire()
             end
-            return
         end
     else
         -- Normal TriggerBot logic with mouse proximity check
         local mousePos = Vector2.new(Mouse.X, Mouse.Y)
         for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChildOfClass("Humanoid") and not IsKO(player) and WallCheck(player.Character.HumanoidRootPart) then
-                local pos, onScreen = Camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
-                if onScreen and (Vector2.new(pos.X, pos.Y) - mousePos).Magnitude < 40 then
-                    Fire()
-                    break
+            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+                if humanoid and humanoid.Health > 0 then
+                    if Toggles.KnockedCheckToggle.Value and humanoid.Health <= humanoid.MaxHealth * 0.01 then
+                        continue
+                    end
+                    if Toggles.WallCheckToggle.Value and not WallCheck(player.Character.HumanoidRootPart) then
+                        continue
+                    end
+
+                    local pos, onScreen = Camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
+                    if onScreen and (Vector2.new(pos.X, pos.Y) - mousePos).Magnitude < 40 then
+                        Fire()
+                        break
+                    end
                 end
             end
         end
